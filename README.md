@@ -54,6 +54,7 @@ console.log(bfr.memoryUsage().compressed); // 633 (those 0 bytes compress well!)
 ```
 
 ## TODO 
+* Offer an API for inserting data (extending in the middle of a buffer without overwriting)
 * Improve LRU caching performance
 * Decrease memory used by metadata (block management)
 * Offer more compression algorithms, namely I think snappy would be a good addition (currently using pako `inflateRaw`/`deflateRaw`)
