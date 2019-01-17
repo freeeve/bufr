@@ -2,9 +2,9 @@
 [![Travis](https://api.travis-ci.com/freeeve/bfr.svg?branch=master)](https://travis-ci.com/freeeve/bfr)
 [![Coveralls](https://img.shields.io/coveralls/freeeve/bfr.svg)](https://coveralls.io/github/freeeve/bfr)
 
-Bfr is an attempt at a drop in replacement for Buffer, except it
-auto-extends, compresses, and has a concept of an LRU cache--
-the amount of memory designated to stay uncompressed for use.
+Bfr is a wrapper for Buffer, adding features like
+auto-extend, compression, and a concept of an LRU cache--the
+amount of memory designated to stay uncompressed for use.
 
 It is not meant to improve performance, but it is meant to save memory, 
 for use when you can sacrifice a little performance for memory.
@@ -52,3 +52,9 @@ console.log(bfr.length); // 100004
 console.log(bfr.uncompressedSize); // 65536 (64KB default cache size)
 console.log(bfr.memoryUsage().compressed); // 633 (those 0 bytes compress well!)
 ```
+
+## TODO 
+* Offer an API for inserting data (extending in the middle of a buffer without overwriting)
+* Improve LRU caching performance
+* Decrease memory used by metadata (block management)
+* Offer more compression algorithms, namely I think snappy would be a good addition (currently using pako `inflateRaw`/`deflateRaw`)
