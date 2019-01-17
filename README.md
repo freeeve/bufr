@@ -3,8 +3,8 @@
 [![Coveralls](https://img.shields.io/coveralls/freeeve/bfr.svg)](https://coveralls.io/github/freeeve/bfr)
 
 Bfr is an attempt a wrapper for Buffer, except it
-auto-extends, compresses, and has a concept of an LRU cache--
-the amount of memory designated to stay uncompressed for use.
+auto-extends, compresses, and has a concept of an LRU cache--the
+amount of memory designated to stay uncompressed for use.
 
 It is not meant to improve performance, but it is meant to save memory, 
 for use when you can sacrifice a little performance for memory.
