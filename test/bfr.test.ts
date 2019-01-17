@@ -196,13 +196,5 @@ describe('Bfr', () => {
     expect(memoryUsage.uncompressed).toBeGreaterThan(1024 * 120);
     expect(memoryUsage.compressed).toBeLessThanOrEqual(1024);
     expect(memoryUsage.compressed).toBeGreaterThan(128);
-
-
-    const bfr2 = new Bfr();
-    bfr2.writeUInt32LE(123, 100000);
-    console.log(bfr2.length); // 100004
-    console.log(bfr2.capacity); // 102400 (4KB * 25 blocks)
-    console.log(bfr2.uncompressedSize); // 102400 (4KB * 25 blocks)
-    console.log(bfr.memoryUsage().compressed); // 65536 (64KB default cache size)
-  })
+  });
 });
