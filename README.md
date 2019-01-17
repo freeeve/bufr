@@ -29,6 +29,12 @@ console.log(bfr.length); // 9
 ```
 
 ### Specifying allocation size and cache size
+Cache size should be a multiple of allocation size, because it will
+end up being one, anyway (rounded down). 
+
+Cache size can be 0, but only in extreme cases. 
+Every read/write will decompress/compress the block.
+
 ```typescript
 // default is 4 and 64 for allocSizeKb and cacheSizeKb, respectively
 // this bfr will have at most 4MB uncompressed blocks at once,
