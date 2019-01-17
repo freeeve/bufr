@@ -60,6 +60,7 @@ console.log(bfr.memoryUsage().compressed); // 633 (those 0 bytes compress well!)
 ```
 
 ## TODO 
+* Read/write to file
 * Offer an API for inserting data (extending in the middle of a buffer without overwriting)
 * Improve LRU caching performance
 * Decrease memory used by metadata (block management)
