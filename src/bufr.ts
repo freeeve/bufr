@@ -1,8 +1,13 @@
 import * as pako from 'pako';
+const snappy = require('snappyjs');
 
+/**
+ * compression options are zlib and snappy.
+ */
 export interface BfrOptions {
   allocSizeKb?: number;
   cacheSizeKb?: number;
+  compression?: string;
 }
 
 interface Block {
@@ -21,6 +26,7 @@ export default class Bufr {
   private _totalSize = 0;
   private _compressedSize = 0;
   public readonly cacheSize: number = 1024 * 64;
+  public readonly compression: string = 'zlib';
   private blocks: Block[] = [];
 
   public get length() {
@@ -51,6 +57,9 @@ export default class Bufr {
       if (options.cacheSizeKb) {
         this.cacheSize = options.cacheSizeKb * 1024;
       }
+      if (options.compression && (options.compression === 'snappy' || options.compression === 'zlib')) {
+        this.compression = options.compression;
+      }
     }
     this.pushEmptyBlock();
   }
@@ -73,8 +82,13 @@ export default class Bufr {
     block.compressed = true;
     this._uncompressedSize -= block.buffer.length;
     this._totalSize -= block.buffer.length;
-    const compressed = pako.deflateRaw(block.buffer);
-    block.buffer = Buffer.from(compressed);
+    if (this.compression === 'snappy') {
+      const compressed = snappy.compress(block.buffer);
+      block.buffer = Buffer.from(compressed);
+    } else {
+      const compressed = pako.deflateRaw(block.buffer);
+      block.buffer = Buffer.from(compressed);
+    }
     this._compressedSize += block.buffer.length;
     this._totalSize += block.buffer.length;
   }
@@ -115,6 +129,12 @@ export default class Bufr {
     });
   }
 
+  /**
+   * reads an 8-bit int at a given offset.
+   * @param {number} offset the offset to read from.
+   * @param {boolean} noassert whether to assert range.
+   * @returns {number}
+   */
   public readInt8(offset: number, noassert?: boolean): number {
     const buffer = this.subBuffer(offset, offset + 1);
     return buffer.readInt8(0, noassert);
@@ -312,8 +332,13 @@ export default class Bufr {
         if (decompress && block.compressed) {
           this._totalSize -= block.buffer.length;
           this._compressedSize -= block.buffer.length;
-          const decompressed = pako.inflateRaw(block.buffer);
-          block.buffer = Buffer.from(decompressed);
+          if (this.compression === 'snappy') {
+            const decompressed = snappy.uncompress(block.buffer);
+            block.buffer = Buffer.from(decompressed);
+          } else {
+            const decompressed = pako.inflateRaw(block.buffer);
+            block.buffer = Buffer.from(decompressed);
+          }
           block.compressed = false;
           block.lastUsed = new Date().getTime();
           this._uncompressedSize += block.buffer.length;

@@ -115,7 +115,8 @@
   },
   "dependencies": {
     "@types/pako": "^1.0.0",
-    "pako": "^1.0.8"
+    "pako": "^1.0.8",
+    "snappyjs": "^0.6.0"
   },
   "husky": {
     "hooks": {

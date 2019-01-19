@@ -13,6 +13,11 @@ describe('Bfr', () => {
     expect(actual).toEqual(expected);
   });
 
+  it('should be able to specify compression alone', () => {
+    const bufr = new Bufr({compression: 'snappy'});
+    expect(bufr.compression).toEqual('snappy');
+  });
+
   it('should be able to specify cacheSizeKb alone', () => {
     const bufr = new Bufr({cacheSizeKb: 2048});
     expect(bufr.cacheSize).toEqual(2048 * 1024);
@@ -176,10 +181,34 @@ describe('Bfr', () => {
     const bufr = new Bufr({allocSizeKb: 4, cacheSizeKb: 128});
     const wordCount = 10240;
     const data = Buffer.from('0123456789');
-    Array.from(Array(wordCount).keys()).forEach((x: number) => {
+    for(let i = 0; i < wordCount; i++) {
       const offset = bufr.length;
       bufr.writeBuffer(data, offset);
-    });
+    }
+    // 4096 * 25 = 102400
+    expect(bufr.totalSize).toEqual(102400);
+
+    // write more data
+    for(let i = 0; i < wordCount; i++) {
+      const offset = bufr.length;
+      bufr.writeBuffer(data, offset);
+    }
+    expect(bufr.totalSize).toBeGreaterThan(1024 * 128);
+    expect(bufr.totalSize).toBeLessThan(1024 * 140);
+    expect(bufr.uncompressedSize).toBeLessThanOrEqual(1024 * 128);
+    expect(bufr.uncompressedSize).toBeGreaterThan(1024 * 120);
+    expect(bufr.compressedSize).toBeLessThanOrEqual(1024);
+    expect(bufr.compressedSize).toBeGreaterThan(128);
+  });
+
+  it('should be able to compress with snappy', () => {
+    const bufr = new Bufr({allocSizeKb: 4, cacheSizeKb: 128, compression: 'snappy'});
+    const wordCount = 10240;
+    const data = Buffer.from('0123456789');
+    for(let i = 0; i < wordCount; i++) {
+      const offset = bufr.length;
+      bufr.writeBuffer(data, offset);
+    }
     // 4096 * 25 = 102400
     expect(bufr.totalSize).toEqual(102400);
 
@@ -192,7 +221,7 @@ describe('Bfr', () => {
     expect(bufr.totalSize).toBeLessThan(1024 * 140);
     expect(bufr.uncompressedSize).toBeLessThanOrEqual(1024 * 128);
     expect(bufr.uncompressedSize).toBeGreaterThan(1024 * 120);
-    expect(bufr.compressedSize).toBeLessThanOrEqual(1024);
+    expect(bufr.compressedSize).toBeLessThanOrEqual(4096);
     expect(bufr.compressedSize).toBeGreaterThan(128);
   });
 });
