@@ -14,4 +14,4 @@ jobs:
     if: branch = master AND NOT type = pull_request
     script:
     - npm run deploy-docs
-    - npx semantic-release
+    - npx semantic-release --allow-same-version
