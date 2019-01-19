@@ -1,6 +1,6 @@
 {
   "name": "bufr",
-  "version": "0.0.0-development",
+  "version": "0.0.3",
   "description": "",
   "keywords": [],
   "main": "dist/bufr.umd.js",
