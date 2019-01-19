@@ -12,7 +12,7 @@
   "author": "freeeve <eve.freema@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/freeeve/bfr"
+    "url": "github.com/freeeve/bfr"
   },
   "license": "MIT",
   "engines": {
