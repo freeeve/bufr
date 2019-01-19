@@ -15,6 +15,4 @@ jobs:
     deploy:
       provider: script
       skip_cleanup: true
-      script:
-      - npm run deploy-docs
-      - npx semantic-release --allow-same-version
+      script: npm run deploy-docs && npx semantic-release --allow-same-version
