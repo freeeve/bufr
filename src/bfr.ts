@@ -89,6 +89,7 @@ export default class Bfr {
       // console.log('out of cache: ', this.uncompressedSize + increase, this.cacheSize);
       let oldest = new Date().getTime();
       let oldestBlockIdx = 0;
+      // TODO should really not scan through the whole list every time
       for (let idx = 0; idx < this.blocks.length; idx += 1) {
         const block = this.blocks[idx];
         if (!block.compressed && block.lastUsed < oldest) {
