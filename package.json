@@ -10,7 +10,10 @@
     "dist"
   ],
   "author": "freeeve <eve.freema@gmail.com>",
-  "repository": "github:freeeve/bufr",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/freeeve/bufr.git"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=6.0.0"
