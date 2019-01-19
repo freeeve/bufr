@@ -12,6 +12,7 @@ branches:
 jobs:
   include:
   - stage: release
+    if: branch = master AND NOT type = pull_request
     deploy:
       provider: script
       skip_cleanup: true
