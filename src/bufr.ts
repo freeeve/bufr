@@ -50,7 +50,7 @@ export class Bufr {
     return this._capacity;
   }
 
-  constructor(options?: BfrOptions) {
+  constructor(options?: BufrOptions) {
     if (options) {
       if (options.allocSizeKb) {
         this.allocSize = options.allocSizeKb * 1024;
