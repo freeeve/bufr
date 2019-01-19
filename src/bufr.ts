@@ -87,7 +87,7 @@ export class Bufr {
       const compressed = snappy.compress(block.buffer);
       block.buffer = Buffer.from(compressed);
     } else {
-      const compressed = pako.deflateRaw(block.buffer);
+      const compressed = pako.deflate(block.buffer);
       block.buffer = Buffer.from(compressed);
     }
     this._compressedSize += block.buffer.length;
@@ -337,7 +337,7 @@ export class Bufr {
             const decompressed = snappy.uncompress(block.buffer);
             block.buffer = Buffer.from(decompressed);
           } else {
-            const decompressed = pako.inflateRaw(block.buffer);
+            const decompressed = pako.inflate(block.buffer);
             block.buffer = Buffer.from(decompressed);
           }
           block.compressed = false;
