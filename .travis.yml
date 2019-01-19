@@ -10,7 +10,7 @@ after_success:
 - npm run report-coverage
 jobs:
   include:
-  - stage: release
+  - stage: deploy
     if: branch = master AND NOT type = pull_request
     script:
     - npm run deploy-docs
