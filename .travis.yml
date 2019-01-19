@@ -13,5 +13,5 @@ jobs:
   - stage: release
     if: branch = master AND NOT type = pull_request
     script:
-    - npx deploy-docs
+    - npm run deploy-docs
     - npx semantic-release

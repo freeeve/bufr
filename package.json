@@ -1,16 +1,16 @@
 {
-  "name": "bfr",
+  "name": "bufr",
   "version": "0.0.0-development",
   "description": "",
   "keywords": [],
-  "main": "dist/bfr.umd.js",
-  "module": "dist/bfr.es5.js",
-  "typings": "dist/types/bfr.d.ts",
+  "main": "dist/bufr.umd.js",
+  "module": "dist/bufr.es5.js",
+  "typings": "dist/types/bufr.d.ts",
   "files": [
     "dist"
   ],
   "author": "freeeve <eve.freema@gmail.com>",
-  "repository": "github:freeeve/bfr",
+  "repository": "github:freeeve/bufr",
   "license": "MIT",
   "engines": {
     "node": ">=6.0.0"

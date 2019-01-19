@@ -1,8 +1,8 @@
-# Bfr
-[![Travis](https://api.travis-ci.com/freeeve/bfr.svg?branch=master)](https://travis-ci.com/freeeve/bfr)
-[![Coveralls](https://img.shields.io/coveralls/freeeve/bfr.svg)](https://coveralls.io/github/freeeve/bfr)
+# Bufr
+[![Travis](https://api.travis-ci.com/freeeve/bufr.svg?branch=master)](https://travis-ci.com/freeeve/bufr)
+[![Coveralls](https://img.shields.io/coveralls/freeeve/bufr.svg)](https://coveralls.io/github/freeeve/bufr)
 
-Bfr is a wrapper for Buffer, adding features like
+Bufr is a wrapper for Buffer, adding features like
 auto-extend, compression, and a concept of an LRU cache--the
 amount of memory designated to stay uncompressed for use.
 
@@ -18,14 +18,14 @@ it is a fair bit faster.
 ## Usage
 
 ```typescript
-const bfr = new Bfr();
+const bufr = new Bufr();
 const data = Buffer.from('hello');
-bfr.writeBuffer(data, 0);
-console.log(bfr.subBuffer(0, 0 + data.length).toString()); // hello
-console.log(bfr.length); // 5
+bufr.writeBuffer(data, 0);
+console.log(bufr.subBuffer(0, 0 + data.length).toString()); // hello
+console.log(bufr.length); // 5
 // append a 32-bit int
-bfr.writeUInt32LE(123123, bfr.length);
-console.log(bfr.length); // 9
+bufr.writeUInt32LE(123123, bufr.length);
+console.log(bufr.length); // 9
 ```
 
 ### Specifying allocation size and cache size
@@ -37,26 +37,26 @@ Every read/write will decompress/compress the block.
 
 ```typescript
 // default is 4 and 64 for allocSizeKb and cacheSizeKb, respectively
-// this bfr will have at most 4MB uncompressed blocks at once,
+// this bufr will have at most 4MB uncompressed blocks at once,
 // feel free to write as much as you want...
-const bfr = new Bfr({allocSizeKb:128, cacheSizeKb:1024 * 4});
+const bufr = new Bufr({allocSizeKb:128, cacheSizeKb:1024 * 4});
 for(let i = 0; i < 1000000; i++) {
-  bfr.writeBuffer(Buffer.from('hello'.repeat(20)), bfr.length);
+  bufr.writeBuffer(Buffer.from('hello'.repeat(20)), bufr.length);
 }
-console.log(bfr.uncompressedSize); // 4194304
+console.log(bufr.uncompressedSize); // 4194304
 ```
 
 ### Auto-extending
 ```typescript
 // default is 4 and 64 for allocSizeKb and cacheSizeKb, respectively
-// this bfr will have at most 4MB uncompressed blocks at once,
+// this bufr will have at most 4MB uncompressed blocks at once,
 // feel free to write as much as you want...
 // or start in the middle!
-const bfr = new Bfr();
-bfr.writeUInt32LE(123, 100000);
-console.log(bfr.length); // 100004
-console.log(bfr.uncompressedSize); // 65536 (64KB default cache size)
-console.log(bfr.memoryUsage().compressed); // 633 (those 0 bytes compress well!)
+const bufr = new Bufr();
+bufr.writeUInt32LE(123, 100000);
+console.log(bufr.length); // 100004
+console.log(bufr.uncompressedSize); // 65536 (64KB default cache size)
+console.log(bufr.memoryUsage().compressed); // 633 (those 0 bytes compress well!)
 ```
 
 ## TODO 

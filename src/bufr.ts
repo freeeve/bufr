@@ -13,7 +13,7 @@ interface Block {
   lastUsed: number;
 }
 
-export default class Bfr {
+export default class Bufr {
   public readonly allocSize: number = 1024 * 4;
   private _length: number = 0;
   private _capacity: number = 0;
@@ -44,7 +44,6 @@ export default class Bfr {
   }
 
   constructor(options?: BfrOptions) {
-    // console.log('new bfr', options);
     if (options) {
       if (options.allocSizeKb) {
         this.allocSize = options.allocSizeKb * 1024;
@@ -64,10 +63,10 @@ export default class Bfr {
     return this.subBuffer(0);
   }
 
-  public static from(something: any, ...options: any[]): Bfr {
-    const bfr = new Bfr();
-    bfr.writeBuffer(Buffer.from(something, ...options), 0);
-    return bfr;
+  public static from(something: any, ...options: any[]): Bufr {
+    const bufr = new Bufr();
+    bufr.writeBuffer(Buffer.from(something, ...options), 0);
+    return bufr;
   }
 
   private compressBlock(block: Block) {
