@@ -1,4 +1,4 @@
-import Bufr from '../src/bufr';
+import {Bufr} from '../src/bufr';
 
 describe('Bfr', () => {
   it('should be able to specify allocSizeKb alone', () => {
