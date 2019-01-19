@@ -116,8 +116,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "commitlint --color false -e ${HUSKY_GIT_PARAMS}",
-      "pre-push": "npm run test:prod && npm run build"
+      "pre-commit": "commitlint --color false -e ${HUSKY_GIT_PARAMS}"
     }
   }
 }
