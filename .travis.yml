@@ -14,6 +14,7 @@ jobs:
     if: branch = master AND NOT type = pull_request
     deploy:
       provider: script
+      skip_cleanup: true
       script:
       - npm run deploy-docs
       - npx semantic-release --allow-same-version
