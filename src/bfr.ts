@@ -18,6 +18,8 @@ export default class Bfr {
   private _length: number = 0;
   private _capacity: number = 0;
   private _uncompressedSize = 0;
+  private _totalSize = 0;
+  private _compressedSize = 0;
   public readonly cacheSize: number = 1024 * 64;
   private blocks: Block[] = [];
 
@@ -29,20 +31,12 @@ export default class Bfr {
     return this._uncompressedSize;
   }
 
-  public memoryUsage() {
-    // TODO calculate metadata
-    let total = 0;
-    let uncompressed = 0;
-    let compressed = 0;
-    this.blocks.forEach(block => {
-      total += block.buffer.length;
-      if (block.compressed) {
-        compressed += block.buffer.length;
-      } else {
-        uncompressed += block.buffer.length;
-      }
-    });
-    return {total, uncompressed, compressed};
+  public get totalSize() {
+    return this._totalSize;
+  }
+
+  public get compressedSize() {
+    return this._compressedSize;
   }
 
   public get capacity() {
@@ -78,10 +72,12 @@ export default class Bfr {
 
   private compressBlock(block: Block) {
     block.compressed = true;
+    this._uncompressedSize -= block.buffer.length;
+    this._totalSize -= block.buffer.length;
     const compressed = pako.deflateRaw(block.buffer);
     block.buffer = Buffer.from(compressed);
-    this._uncompressedSize -= this.allocSize;
-
+    this._compressedSize += block.buffer.length;
+    this._totalSize += block.buffer.length;
   }
 
   private checkCache(increase: number) {
@@ -295,6 +291,7 @@ export default class Bfr {
     });
     this._capacity += this.allocSize;
     this._uncompressedSize += this.allocSize;
+    this._totalSize += this.allocSize;
     this.checkCache(0);
     return this.blocks.length - 1;
   }
@@ -314,11 +311,14 @@ export default class Bfr {
     for (const block of this.blocks) {
       if (offset >= block.startOffset && offset < block.startOffset + block.size) {
         if (decompress && block.compressed) {
+          this._totalSize -= block.buffer.length;
+          this._compressedSize -= block.buffer.length;
           const decompressed = pako.inflateRaw(block.buffer);
           block.buffer = Buffer.from(decompressed);
           block.compressed = false;
           block.lastUsed = new Date().getTime();
-          this._uncompressedSize += block.size;
+          this._uncompressedSize += block.buffer.length;
+          this._totalSize += block.buffer.length;
         }
         this.checkCache(0);
         return block;

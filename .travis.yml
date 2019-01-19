@@ -8,16 +8,10 @@ script:
 - npm run test:prod && npm run build
 after_success:
 - npm run report-coverage
-branches:
-  except:
-  - "/^v\\d+\\.\\d+\\.\\d+$/"
 jobs:
   include:
   - stage: release
     if: branch = master AND NOT type = pull_request
-    deploy:
-      provider: script
-      skip_cleanup: true
-      script:
-      - npx deploy-docs
-      - npx semantic-release
+    script:
+    - npx deploy-docs
+    - npx semantic-release

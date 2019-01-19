@@ -157,7 +157,7 @@ describe('Bfr', () => {
     });
     expect(bfr.length).toBeGreaterThan(bfr.cacheSize);
     expect(bfr.uncompressedSize).toBeLessThanOrEqual(bfr.cacheSize);
-  })
+  });
 
   it('should be able to compress all', () => {
     const bfr = new Bfr({allocSizeKb: 4, cacheSizeKb: 128});
@@ -180,21 +180,19 @@ describe('Bfr', () => {
       const offset = bfr.length;
       bfr.writeBuffer(data, offset);
     });
-    let memoryUsage = bfr.memoryUsage();
     // 4096 * 25 = 102400
-    expect(memoryUsage.total).toEqual(102400);
+    expect(bfr.totalSize).toEqual(102400);
 
     // write more data
     Array.from(Array(wordCount).keys()).forEach((x: number) => {
       const offset = bfr.length;
       bfr.writeBuffer(data, offset);
     });
-    memoryUsage = bfr.memoryUsage();
-    expect(memoryUsage.total).toBeGreaterThan(1024 * 128);
-    expect(memoryUsage.total).toBeLessThan(1024 * 140);
-    expect(memoryUsage.uncompressed).toBeLessThanOrEqual(1024 * 128);
-    expect(memoryUsage.uncompressed).toBeGreaterThan(1024 * 120);
-    expect(memoryUsage.compressed).toBeLessThanOrEqual(1024);
-    expect(memoryUsage.compressed).toBeGreaterThan(128);
+    expect(bfr.totalSize).toBeGreaterThan(1024 * 128);
+    expect(bfr.totalSize).toBeLessThan(1024 * 140);
+    expect(bfr.uncompressedSize).toBeLessThanOrEqual(1024 * 128);
+    expect(bfr.uncompressedSize).toBeGreaterThan(1024 * 120);
+    expect(bfr.compressedSize).toBeLessThanOrEqual(1024);
+    expect(bfr.compressedSize).toBeGreaterThan(128);
   });
 });
