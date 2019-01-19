@@ -1,10 +1,11 @@
 import * as pako from 'pako';
+
 const snappy = require('snappyjs');
 
 /**
  * compression options are zlib and snappy.
  */
-export interface BfrOptions {
+export interface BufrOptions {
   allocSizeKb?: number;
   cacheSizeKb?: number;
   compression?: string;
@@ -18,7 +19,7 @@ interface Block {
   lastUsed: number;
 }
 
-export default class Bufr {
+export class Bufr {
   public readonly allocSize: number = 1024 * 4;
   private _length: number = 0;
   private _capacity: number = 0;
