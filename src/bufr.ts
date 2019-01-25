@@ -93,9 +93,8 @@ export class Bufr {
     this._totalSize += block.buffer.length;
   }
 
-  private checkCache(increase: number) {
-    if (this.cacheSize < this.uncompressedSize + increase) {
-      // console.log('out of cache: ', this.uncompressedSize + increase, this.cacheSize);
+  private checkCache() {
+    if (this.cacheSize < this.uncompressedSize) {
       let oldest = new Date().getTime();
       let oldestBlockIdx = 0;
       // TODO should really not scan through the whole list every time
@@ -106,17 +105,6 @@ export class Bufr {
           oldestBlockIdx = idx;
         }
       }
-      /*
-      console.log(this.blocks.map(({compressed, lastUsed, startOffset}, idx) => {
-        return {
-          idx,
-          compressed,
-          lastUsed,
-          startOffset
-        };
-      }));
-      console.log('evicting block', oldestBlockIdx);
-      */
       this.compressBlock(this.blocks[oldestBlockIdx]);
     }
   }
@@ -132,58 +120,39 @@ export class Bufr {
   /**
    * reads an 8-bit int at a given offset.
    * @param {number} offset the offset to read from.
-   * @param {boolean} noassert whether to assert range.
    * @returns {number}
    */
-  public readInt8(offset: number, noassert?: boolean): number {
-    const buffer = this.subBuffer(offset, offset + 1);
-    return buffer.readInt8(0, noassert);
+  public readInt8(offset: number): number {
+    return this.subBuffer(offset, offset + 1).readInt8(0, true);
   }
 
-  public readUInt8(offset: number, noassert?: boolean): number {
-    // probably not optimal
-    // console.log(`reading uint8 at ${offset}`);
-    const buffer = this.subBuffer(offset, offset + 1);
-    return buffer.readUInt8(0, noassert);
+  public readUInt8(offset: number): number {
+    return this.subBuffer(offset, offset + 1).readUInt8(0, true);
   }
 
-  public readInt16LE(offset: number, noassert?: boolean): number {
-    // probably not optimal
-    // console.log(`reading int16 at ${offset}`);
-    const buffer = this.subBuffer(offset, offset + 2);
-    return buffer.readInt16LE(0, noassert);
+  public readInt16LE(offset: number): number {
+    return this.subBuffer(offset, offset + 2).readInt16LE(0, true);
   }
 
-  public readUInt16LE(offset: number, noassert?: boolean): number {
-    // probably not optimal
-    const buffer = this.subBuffer(offset, offset + 2);
-    return buffer.readUInt16LE(0, noassert);
+  public readUInt16LE(offset: number): number {
+    return this.subBuffer(offset, offset + 2).readUInt16LE(0, true);
   }
 
-  public readInt32LE(offset: number, noassert?: boolean): number {
-    // probably not optimal
-    // console.log(`reading int32 at ${offset}`);
-    const buffer = this.subBuffer(offset, offset + 4);
-    return buffer.readInt32LE(0, noassert);
+  public readInt32LE(offset: number): number {
+    return this.subBuffer(offset, offset + 4).readInt32LE(0, true);
   }
 
-  public readUInt32LE(offset: number, noassert?: boolean): number {
-    // probably not optimal
-    const buffer = this.subBuffer(offset, offset + 4);
-    return buffer.readUInt32LE(0, noassert);
+  public readUInt32LE(offset: number): number {
+    return this.subBuffer(offset, offset + 4).readUInt32LE(0, true);
   }
 
 
   public readDoubleLE(offset: number): number {
-    // probably not optimal
-    const buffer = this.subBuffer(offset, offset + 8);
-    return buffer.readDoubleLE(0, true);
+    return this.subBuffer(offset, offset + 8).readDoubleLE(0, true);
   }
 
   public readFloatLE(offset: number): number {
-    // probably not optimal
-    const buffer = this.subBuffer(offset, offset + 4);
-    return buffer.readFloatLE(0, true);
+    return this.subBuffer(offset, offset + 4).readFloatLE(0, true);
   }
 
   /** similar to slice but no guarantee that the
@@ -194,9 +163,8 @@ export class Bufr {
    * @returns {Buffer}
    */
   public subBuffer(start: number, end?: number): Buffer {
-    // console.log(`subBuffer top start: ${start}, end: ${end}`);
     const origStart = start;
-    let block = this.getOffsetBlock(start, true);
+    let block = this.getOffsetBlock(start);
     if (!end) {
       end = this.length;
     }
@@ -204,17 +172,15 @@ export class Bufr {
     const length = origEnd - origStart;
     start -= block.startOffset;
     end = start + length;
-    // console.log(`subBuffer length: ${length}, start: ${start}, end: ${end}`);
     if (end > block.buffer.length) {
       // can't solve with simple slice, have to splice buffers together
       const buffer = Buffer.alloc(length);
       let read = 0;
       do {
         read += block.buffer.copy(buffer, read, start, end);
-        // console.log('subBuffer in first case loop', buffer.toString(), block.startOffset, read, start, end);
         start = 0;
         end = length - read;
-        block = this.getOffsetBlock(origStart + read, true);
+        block = this.getOffsetBlock(origStart + read);
       } while (read < length);
       return buffer;
     } else {
@@ -224,73 +190,59 @@ export class Bufr {
     }
   }
 
-  public writeInt8(int8: number, offset: number, noassert?: boolean): number {
+  public writeInt8(int8: number, offset: number): number {
     const buffer = Buffer.alloc(1);
-    buffer.writeInt8(int8, 0, noassert);
+    buffer.writeInt8(int8, 0, true);
     return this.writeBuffer(buffer, offset);
   }
 
-  public writeUInt8(uint8: number, offset: number, noassert?: boolean): number {
-    // probably not optimal
-    // console.log(`writing uint8 ${uint8} at ${offset}`);
+  public writeUInt8(uint8: number, offset: number): number {
     const buffer = Buffer.alloc(1);
-    buffer.writeUInt8(uint8, 0, noassert);
+    buffer.writeUInt8(uint8, 0, true);
     return this.writeBuffer(buffer, offset);
   }
 
-  public writeInt16LE(uint16: number, offset: number, noassert?: boolean): number {
-    // probably not optimal
+  public writeInt16LE(uint16: number, offset: number): number {
     const buffer = Buffer.alloc(2);
-    buffer.writeInt16LE(uint16, 0, noassert);
+    buffer.writeInt16LE(uint16, 0, true);
     return this.writeBuffer(buffer, offset);
   }
 
-  public writeUInt16LE(uint16: number, offset: number, noassert?: boolean): number {
-    // probably not optimal
+  public writeUInt16LE(uint16: number, offset: number): number {
     const buffer = Buffer.alloc(2);
-    // console.log(`writing int16 ${uint16} at ${offset}`);
-    buffer.writeUInt16LE(uint16, 0, noassert);
+    buffer.writeUInt16LE(uint16, 0, true);
     return this.writeBuffer(buffer, offset);
   }
 
-  public writeInt32LE(uint32: number, offset: number, noassert?: boolean): number {
-    // probably not optimal
-    // console.log(`writing int32 ${uint32} at ${offset}`);
+  public writeInt32LE(uint32: number, offset: number): number {
     const buffer = Buffer.alloc(4);
-    buffer.writeInt32LE(uint32, 0, noassert);
+    buffer.writeInt32LE(uint32, 0, true);
     return this.writeBuffer(buffer, offset);
   }
 
-  public writeUInt32LE(uint32: number, offset: number, noassert?: boolean): number {
-    // probably not optimal
+  public writeUInt32LE(uint32: number, offset: number): number {
     const buffer = Buffer.alloc(4);
-    buffer.writeUInt32LE(uint32, 0, noassert);
+    buffer.writeUInt32LE(uint32, 0, true);
     return this.writeBuffer(buffer, offset);
   }
 
-  public writeDoubleLE(float: number, offset: number, noassert?: boolean): number {
-    // probably not optimal
+  public writeDoubleLE(float: number, offset: number): number {
     const buffer = Buffer.alloc(8);
-    buffer.writeDoubleLE(float, 0, noassert);
+    buffer.writeDoubleLE(float, 0, true);
     return this.writeBuffer(buffer, offset);
   }
 
-  public writeFloatLE(float: number, offset: number, noassert?: boolean): number {
-    // probably not optimal
+  public writeFloatLE(float: number, offset: number): number {
     const buffer = Buffer.alloc(4);
-    buffer.writeFloatLE(float, 0, noassert);
+    buffer.writeFloatLE(float, 0, true);
     return this.writeBuffer(buffer, offset);
   }
-
-  // TODO insert (interject values at an offset)
 
   public writeBuffer(buffer: Buffer, offset: number): number {
-    // console.log('writeBuffer', offset);
     let localOffset = offset;
     let wrote = 0;
     do {
-      // console.log('writeBuffer in loop', localOffset + wrote);
-      const block = this.getOffsetBlock(localOffset, true);
+      const block = this.getOffsetBlock(localOffset);
       localOffset = offset - block.startOffset + wrote;
       wrote += buffer.copy(block.buffer, localOffset, wrote);
     } while (wrote < buffer.length);
@@ -311,40 +263,35 @@ export class Bufr {
     this._capacity += this.allocSize;
     this._uncompressedSize += this.allocSize;
     this._totalSize += this.allocSize;
-    this.checkCache(0);
+    this.checkCache();
     return this.blocks.length - 1;
   }
 
   private ensureSpace(size: number): Block {
-    // console.log("ensureSpace", size);
     while (size >= this.capacity) {
-      // console.log("ensureSpace loop", size, this.capacity);
       this.pushEmptyBlock();
     }
     return this.blocks[this.blocks.length - 1];
   }
 
-  private getOffsetBlock(offset: number, decompress: boolean): Block {
-    // console.log("get offset block", offset);
+  private getOffsetBlock(offset: number): Block {
     this.ensureSpace(offset);
     for (const block of this.blocks) {
       if (offset >= block.startOffset && offset < block.startOffset + block.size) {
-        if (decompress && block.compressed) {
+        if (block.compressed) {
           this._totalSize -= block.buffer.length;
           this._compressedSize -= block.buffer.length;
           if (this.compression === 'snappy') {
-            const decompressed = snappy.uncompress(block.buffer);
-            block.buffer = Buffer.from(decompressed);
+            block.buffer = Buffer.from(snappy.uncompress(block.buffer));
           } else {
-            const decompressed = pako.inflateRaw(block.buffer);
-            block.buffer = Buffer.from(decompressed);
+            block.buffer = Buffer.from(pako.inflateRaw(block.buffer));
           }
           block.compressed = false;
           block.lastUsed = new Date().getTime();
           this._uncompressedSize += block.buffer.length;
           this._totalSize += block.buffer.length;
         }
-        this.checkCache(0);
+        this.checkCache();
         return block;
       }
     }
