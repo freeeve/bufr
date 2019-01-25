@@ -1,12 +1,20 @@
 language: node_js
 node_js:
 - '11'
+env:
+  global:
+    - CC_TEST_REPORTER_ID=fef014fc3e991f262b87f86ad3a15e98603ab4eb7a724c6c09818b579daecb0f
 cache:
   directories:
   - "~/.npm"
+before_script:
+- curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+- chmod +x ./cc-test-reporter
+- ./cc-test-reporter before-build
 script:
 - npm run test:prod && npm run build
 after_success:
 - npm run report-coverage
 - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then npm run deploy-docs; fi
 - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then npx semantic-release --allow-same-version; fi
+- if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
