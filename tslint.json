@@ -1,6 +1,10 @@
 {
   "extends": [
+    "tslint-clean-code",
     "tslint-config-standard",
     "tslint-config-prettier"
-  ]
+  ],
+  "rules": {
+    "newspaper-order": true
+  }
 }

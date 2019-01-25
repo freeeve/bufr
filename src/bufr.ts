@@ -1,3 +1,5 @@
+import {CacheUtils} from './cacheutils';
+
 const pako = require('pako');
 const snappy = require('snappyjs');
 
@@ -10,7 +12,7 @@ export interface BufrOptions {
   compression?: string;
 }
 
-interface Block {
+export interface Block {
   buffer: Buffer;
   compressed: boolean;
   startOffset: number;
@@ -20,13 +22,14 @@ interface Block {
 
 export class Bufr {
   public readonly allocSize: number = 1024 * 4;
+  public readonly cacheSize: number = 1024 * 64;
+  public readonly compress = snappy.compress;
+  public readonly decompress = snappy.uncompress;
   private _length: number = 0;
   private _capacity: number = 0;
   private _uncompressedSize = 0;
   private _totalSize = 0;
   private _compressedSize = 0;
-  public readonly cacheSize: number = 1024 * 64;
-  public readonly compression: string = 'zlib';
   private blocks: Block[] = [];
 
   public get length() {
@@ -50,26 +53,25 @@ export class Bufr {
   }
 
   constructor(options?: BufrOptions) {
-    if (options) {
-      if (options.allocSizeKb) {
-        this.allocSize = options.allocSizeKb * 1024;
-      }
-      if (options.cacheSizeKb) {
-        this.cacheSize = options.cacheSizeKb * 1024;
-      }
-      if (options.compression && (options.compression === 'snappy' || options.compression === 'zlib')) {
-        this.compression = options.compression;
-      }
+    if (options && options.allocSizeKb) {
+      this.allocSize = options.allocSizeKb * 1024;
+    }
+    if (options && options.cacheSizeKb) {
+      this.cacheSize = options.cacheSizeKb * 1024;
+    }
+    if (options && options.compression && options.compression === 'zlib') {
+      this.compress = pako.deflateRaw;
+      this.decompress = pako.inflateRaw;
     }
     this.pushEmptyBlock();
   }
 
-  public toString(...options: any[]) {
-    return this.toBuffer().toString(...options);
-  }
-
   public toBuffer(): Buffer {
     return this.subBuffer(0);
+  }
+
+  public toString(...options: any[]) {
+    return this.toBuffer().toString(...options);
   }
 
   public static from(something: any, ...options: any[]): Bufr {
@@ -82,29 +84,14 @@ export class Bufr {
     block.compressed = true;
     this._uncompressedSize -= block.buffer.length;
     this._totalSize -= block.buffer.length;
-    if (this.compression === 'snappy') {
-      const compressed = snappy.compress(block.buffer);
-      block.buffer = Buffer.from(compressed);
-    } else {
-      const compressed = pako.deflateRaw(block.buffer);
-      block.buffer = Buffer.from(compressed);
-    }
+    block.buffer = Buffer.from(this.compress(block.buffer));
     this._compressedSize += block.buffer.length;
     this._totalSize += block.buffer.length;
   }
 
   private checkCache() {
     if (this.cacheSize < this.uncompressedSize) {
-      let oldest = new Date().getTime();
-      let oldestBlockIdx = 0;
-      // TODO should really not scan through the whole list every time
-      for (let idx = 0; idx < this.blocks.length; idx += 1) {
-        const block = this.blocks[idx];
-        if (!block.compressed && block.lastUsed < oldest) {
-          oldest = block.lastUsed;
-          oldestBlockIdx = idx;
-        }
-      }
+      const oldestBlockIdx = CacheUtils.findLruBlock(this.blocks);
       this.compressBlock(this.blocks[oldestBlockIdx]);
     }
   }
@@ -191,20 +178,20 @@ export class Bufr {
   }
 
   public writeInt8(int8: number, offset: number): number {
-    const buffer = Buffer.alloc(1);
-    buffer.writeInt8(int8, 0, true);
-    return this.writeBuffer(buffer, offset);
+    const block = this.getOffsetBlock(offset);
+    const thisOffset = offset - block.startOffset;
+    return block.buffer.writeInt8(int8, thisOffset);
   }
 
   public writeUInt8(uint8: number, offset: number): number {
-    const buffer = Buffer.alloc(1);
-    buffer.writeUInt8(uint8, 0, true);
-    return this.writeBuffer(buffer, offset);
+    const block = this.getOffsetBlock(offset);
+    const thisOffset = offset - block.startOffset;
+    return block.buffer.writeUInt8(uint8, thisOffset);
   }
 
-  public writeInt16LE(uint16: number, offset: number): number {
+  public writeInt16LE(int16: number, offset: number): number {
     const buffer = Buffer.alloc(2);
-    buffer.writeInt16LE(uint16, 0, true);
+    buffer.writeInt16LE(int16, 0, true);
     return this.writeBuffer(buffer, offset);
   }
 
@@ -214,9 +201,9 @@ export class Bufr {
     return this.writeBuffer(buffer, offset);
   }
 
-  public writeInt32LE(uint32: number, offset: number): number {
+  public writeInt32LE(int32: number, offset: number): number {
     const buffer = Buffer.alloc(4);
-    buffer.writeInt32LE(uint32, 0, true);
+    buffer.writeInt32LE(int32, 0, true);
     return this.writeBuffer(buffer, offset);
   }
 
@@ -252,7 +239,7 @@ export class Bufr {
     return buffer.length;
   }
 
-  private pushEmptyBlock(): number {
+  private pushEmptyBlock() {
     this.blocks.push({
       buffer: Buffer.alloc(this.allocSize),
       compressed: false,
@@ -264,38 +251,32 @@ export class Bufr {
     this._uncompressedSize += this.allocSize;
     this._totalSize += this.allocSize;
     this.checkCache();
-    return this.blocks.length - 1;
   }
 
-  private ensureSpace(size: number): Block {
-    while (size >= this.capacity) {
-      this.pushEmptyBlock();
+  private decompressBlock(block: Block) {
+    if (block.compressed) {
+      this._totalSize -= block.buffer.length;
+      this._compressedSize -= block.buffer.length;
+      block.buffer = Buffer.from(this.decompress(block.buffer));
+      block.compressed = false;
+      block.lastUsed = new Date().getTime();
+      this._uncompressedSize += block.buffer.length;
+      this._totalSize += block.buffer.length;
     }
-    return this.blocks[this.blocks.length - 1];
   }
 
   private getOffsetBlock(offset: number): Block {
-    this.ensureSpace(offset);
+    while (offset >= this.capacity) {
+      this.pushEmptyBlock();
+    }
     for (const block of this.blocks) {
       if (offset >= block.startOffset && offset < block.startOffset + block.size) {
-        if (block.compressed) {
-          this._totalSize -= block.buffer.length;
-          this._compressedSize -= block.buffer.length;
-          if (this.compression === 'snappy') {
-            block.buffer = Buffer.from(snappy.uncompress(block.buffer));
-          } else {
-            block.buffer = Buffer.from(pako.inflateRaw(block.buffer));
-          }
-          block.compressed = false;
-          block.lastUsed = new Date().getTime();
-          this._uncompressedSize += block.buffer.length;
-          this._totalSize += block.buffer.length;
-        }
+        this.decompressBlock(block);
         this.checkCache();
         return block;
       }
     }
     // never hit, but ensures function type
-    return this.ensureSpace(offset);
+    return this.blocks[this.blocks.length - 1];
   }
 }

@@ -110,6 +110,7 @@
     "ts-jest": "^23.10.2",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
+    "tslint-clean-code": "^0.2.9",
     "tslint-config-prettier": "^1.15.0",
     "tslint-config-standard": "^8.0.1",
     "typedoc": "^0.12.0",

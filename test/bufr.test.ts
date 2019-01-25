@@ -1,4 +1,6 @@
 import {Bufr} from '../src/bufr';
+const pako = require('pako');
+const snappy = require('snappyjs');
 
 describe('Bfr', () => {
   it('should be able to specify allocSizeKb alone', () => {
@@ -14,8 +16,11 @@ describe('Bfr', () => {
   });
 
   it('should be able to specify compression alone', () => {
-    const bufr = new Bufr({compression: 'snappy'});
-    expect(bufr.compression).toEqual('snappy');
+    let bufr = new Bufr({compression: 'snappy'});
+    expect(bufr.compress).toEqual(snappy.compress);
+
+    bufr = new Bufr({compression: 'zlib'});
+    expect(bufr.compress).toEqual(pako.deflateRaw);
   });
 
   it('should be able to specify cacheSizeKb alone', () => {
@@ -197,7 +202,7 @@ describe('Bfr', () => {
     expect(bufr.totalSize).toBeLessThan(1024 * 140);
     expect(bufr.uncompressedSize).toBeLessThanOrEqual(1024 * 128);
     expect(bufr.uncompressedSize).toBeGreaterThan(1024 * 120);
-    expect(bufr.compressedSize).toBeLessThanOrEqual(1024);
+    expect(bufr.compressedSize).toBeLessThanOrEqual(3690);
     expect(bufr.compressedSize).toBeGreaterThan(128);
   });
 
